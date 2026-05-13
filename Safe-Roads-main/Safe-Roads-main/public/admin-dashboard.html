@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Safe Roads</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            background-color: #f1f5f9;
+        }
+        .sidebar {
+            height: 100vh;
+            background: linear-gradient(180deg, #0f172a, #1e293b);
+            color: white;
+            position: fixed;
+            width: 250px;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+        .sidebar a {
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 15px 20px;
+            display: block;
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            background: rgba(255,255,255,0.05);
+            color: white;
+            border-left-color: #4f46e5;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 2px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="p-4 text-center border-bottom border-secondary mb-3">
+            <i class="fa-solid fa-shield-halved display-6 text-primary mb-2"></i>
+            <h5 class="fw-bold m-0">Admin Portal</h5>
+        </div>
+        <a href="#" class="active" onclick="showTab('dashboard')"><i class="fa-solid fa-chart-pie me-2"></i> Overview</a>
+        <a href="#" onclick="showTab('logs')"><i class="fa-solid fa-users-viewfinder me-2"></i> Visitor Logs</a>
+        <a href="#" onclick="showTab('hazards')"><i class="fa-solid fa-road-circle-exclamation me-2"></i> Hazard Reports</a>
+        <a href="#" onclick="showTab('feedback')"><i class="fa-solid fa-comments me-2"></i> Feedback Forms</a>
+        
+        <div style="position: absolute; bottom: 20px; width: 100%;">
+            <a href="/api/admin/export-excel" target="_blank" class="text-success mb-2"><i class="fa-solid fa-file-excel me-2"></i> Export to Excel</a>
+            <a href="#" onclick="logoutAdmin()" class="text-danger"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Overview Tab -->
+        <div id="tab-dashboard" class="tab-pane d-block">
+            <h2 class="fw-bold mb-4">Dashboard Overview</h2>
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card border-top border-4 border-primary">
+                        <h6 class="text-muted fw-bold text-uppercase">Total Visits</h6>
+                        <h2 class="fw-bold m-0" id="stat-visits">0</h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card border-top border-4 border-danger">
+                        <h6 class="text-muted fw-bold text-uppercase">Hazard Reports</h6>
+                        <h2 class="fw-bold m-0" id="stat-hazards">0</h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card border-top border-4 border-success">
+                        <h6 class="text-muted fw-bold text-uppercase">Feedback Forms</h6>
+                        <h2 class="fw-bold m-0" id="stat-feedback">0</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-info">
+                <i class="fa-solid fa-circle-info me-2"></i> Welcome back, Admin. Select a tab from the sidebar to view detailed records.
+            </div>
+        </div>
+
+        <!-- Logs Tab -->
+        <div id="tab-logs" class="tab-pane d-none">
+            <h2 class="fw-bold mb-4">Website Visitor Logs</h2>
+            <div class="table-container table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>IP Address / Visitor ID</th>
+                            <th>Platform / Browser</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table-body">
+                        <tr><td colspan="3" class="text-center py-4">Loading logs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Hazards Tab -->
+        <div id="tab-hazards" class="tab-pane d-none">
+            <h2 class="fw-bold mb-4">Hazard Reports</h2>
+            <div class="table-container table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Location (Lat, Lng)</th>
+                            <th>Description</th>
+                            <th>Reported At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hazards-table-body">
+                        <tr><td colspan="4" class="text-center py-4">Loading reports...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Feedback Tab -->
+        <div id="tab-feedback" class="tab-pane d-none">
+            <h2 class="fw-bold mb-4">Feedback & Contact Forms</h2>
+            <div class="table-container table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact Info</th>
+                            <th>Category</th>
+                            <th>Message</th>
+                            <th>Submitted At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feedback-table-body">
+                        <tr><td colspan="5" class="text-center py-4">Loading feedback...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/admin.js"></script>
+    <script>
+        // Check if admin is logged in before rendering page
+        if (sessionStorage.getItem('isAdminLoggedIn') !== 'true') {
+            window.location.href = '/admin-login.html';
+        } else {
+            // Fetch data
+            fetchDashboardData();
+        }
+    </script>
+</body>
+</html>
